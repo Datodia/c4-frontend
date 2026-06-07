@@ -8,9 +8,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import api from '../lib/axios';
 
 const schema = z.object({
-  name: z.string().min(1, "პროდუქტის სახელი აუცილებელია"),
-  price: z.number('ფასი აუცილებელია'),
-  desc: z.string().optional(),
+    productImage: z
+        .any()
+        .refine((files) => files?.length === 1, "სურათი აუცილებელია")
+        .transform((files) => files[0]),
+    name: z.string().min(1, "პროდუქტის სახელი აუცილებელია"),
+    price: z.number('ფასი აუცილებელია'),
+    desc: z.string().optional(),
 });
 
 export default function AddProduct() {
@@ -18,7 +22,7 @@ export default function AddProduct() {
     const navigate = useNavigate()
 
     useEffect(() => {
-        if(!user){
+        if (!user) {
             navigate('/')
         }
     }, [])
@@ -29,21 +33,30 @@ export default function AddProduct() {
         resolver: zodResolver(schema)
     })
     const [error, setError] = useState('')
+    const [loading, setLoading] = useState(false)
 
     const onSubmit = async (data) => {
-        try{
-            console.log(data, "data")
+        try {
+            const formData = new FormData()
+            setLoading(true)
+
+            formData.append('productImage', data.productImage)
+            formData.append('name', data.name)
+            formData.append('price', data.price)
+            formData.append('desc', data.desc)
             setError('')
-            const resp = await api.post('/products', data, {
+            const resp = await api.post('/products', formData, {
                 headers: {
+                    'content-type': 'multipart/form-data',
                     'Authorization': `Bearer ${token}`
                 }
             })
-            if(resp.status === 201){
-               alert('Product Created Successfully')
-               reset()
+            if (resp.status === 201) {
+                alert('Product Created Successfully')
+                reset()
             }
-        }catch(e){
+            setLoading(false)
+        } catch (e) {
             setError(e.response.data.message)
         }
     }
@@ -54,6 +67,12 @@ export default function AddProduct() {
     return (
         <div className='w-full h-screen flex justify-center items-center'>
             <form onSubmit={handleSubmit(onSubmit)} className='border-2 p-3 rounded-md w-2/5 flex flex-col gap-3'>
+
+                <input
+                    type="file"
+                    {...register('productImage')}
+                />
+
                 <input
                     type="text"
                     placeholder='name'
@@ -79,7 +98,7 @@ export default function AddProduct() {
                 {errors.desc && <p className='text-red-500'>{errors.desc.message}</p>}
                 {error && <p className='text-red-500'>{error}</p>}
 
-                <button className='bg-blue-500 text-white font-bold p-2'>Create New Product</button>
+                <button className='bg-blue-500 text-white font-bold p-2'>{loading ? 'Loading...' : 'Create New Product'}</button>
             </form>
         </div>
     )

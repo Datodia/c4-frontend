@@ -52,10 +52,11 @@ export default function Home() {
             <div className='grid grid-cols-3 gap-2'>
                 {products.length > 0 ? products.map(product => (
                     <div key={product} className='border-2 rounded-md p-2'>
-                        <h1>{product.name}</h1>
-                        <h2>{product.price}</h2>
-                        <h2>{product.review}</h2>
-                        <p className='text-gray-500'>{product.seller.fullName}</p>
+                        <img src={product.productImgUrl} alt=""  />
+                        <h1>Name: {product.name}</h1>
+                        <h2>Price: ${product.price}</h2>
+                        <h2>Review: {product.review}</h2>
+                        <p className='text-gray-500'>seller @{product.seller.fullName}</p>
                     </div>
                 )): <h1>Loading...</h1>}
             </div>
